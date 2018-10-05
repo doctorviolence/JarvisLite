@@ -3,84 +3,97 @@ import styled from 'styled-components';
 import apiHomes from '../../api/apiHomes';
 
 const HomeContainer = styled.div`
-    height: 500px;
-    width: 200px;
-    margin-left: 20px;
+    width: 400px;
+    height: fit-content;
+    margin-top: 64px;
+    margin-right: 32px;
+    margin-bottom: 32px;    
     border: 1px solid #f2f2f2;
+    text-align: center;
     user-select: none;
     
-    @media screen and (max-width: 700px) {
-        width: 20px;
-        height: 250px;
-        max-width: 200px;
-        max-height: 200px;
+    @media screen and (max-width: 500px) {
+        width: 300px;
+        margin-right: 0px;
     }
 `;
 
 const ImageContainer = styled.img`
     height: 200px;
-    width: 200px;    
+    width: 200px;  
 `;
 
 const Title = styled.h2`
-    color: #444444;
+    color: #CC0033;
     font-size: 20px;
     user-select: none;
     cursor: default;
 `;
 
-const RoomValues = styled.div`
-    margin-bottom: 40px;
-    font-size: 14px;
-    display: flex;
-    text-align: left;
-    border-bottom: 1px solid #bdbebf;
-    align-items: center;
+const Room = styled.ul`
+`;
+
+const RoomValue = styled.li`
+    width: fit-content;
+    font-size: 16px;
+    list-style: none;
     user-select: none;
-    
-    @media screen and (max-width: 700px) {
-        width: 80vw;
-        font-size: 16px;
-    }
 `;
 
 class Home extends Component {
     constructor(props) {
         super(props);
-        this.retrieveRoomValuesFromServer = this.retrieveRoomValuesFromServer.bind(this);
+        this.retrieveUpdatedRoomValuesFromServer = this.retrieveUpdatedRoomValuesFromServer.bind(this);
         this.state = {
-            roomValues: []
+            roomValues: null
         };
     }
 
     componentDidMount() {
         const id = this.props.id;
-        if (id) {
-            this.retrieveRoomValuesFromServer(id);
+        if (!this.state.roomValues) {
+            this.retrieveInitialRoomValuesFromServer(id);
         }
     };
 
-    async retrieveRoomValuesFromServer(id) {
+    retrieveInitialRoomValuesFromServer = (id) => {
         try {
-            setInterval(async () => {
-                await apiHomes.getHomeData(id).then(response => {
-                    const rooms = response.data.rooms;
-                    this.setState({roomValues: rooms});
-                })
-            }, 5000);
+            apiHomes.getHomeData(id).then(response => {
+                const initRoomValues = response.data.rooms;
+                this.setState({roomValues: initRoomValues});
+
+                // After initial values have been set it will then call this method which fetches updated values every 60 secs
+                this.retrieveUpdatedRoomValuesFromServer(id);
+            });
         } catch (e) {
             console.log('Failed to retrieve room values from server: ', e);
         }
     };
 
+    async retrieveUpdatedRoomValuesFromServer(id) {
+        try {
+            setInterval(async () => {
+                await apiHomes.getHomeData(id).then(response => {
+                    const updatedRoomValues = response.data.rooms;
+                    this.setState({roomValues: updatedRoomValues});
+                })
+            }, 60000);
+        } catch (e) {
+            console.log('Failed to retrieve updated room values from server: ', e);
+        }
+    };
+
     render() {
         let home = null;
-        console.log('[Home.js] render method');
 
         if (this.state.roomValues) {
             home = this.state.roomValues.map(h => {
-                    return <RoomValues key={h.name}>Room: {h.name} Temperature: {h.temperature} Humidity: {h.humidity} Date
-                        Retrieve: {h.date}</RoomValues>
+                    return <Room key={h.name}>
+                        <RoomValue>Room: {h.name}</RoomValue>
+                        <RoomValue>Temperature: {h.temperature}°C</RoomValue>
+                        <RoomValue>Humidity: {Math.floor(h.humidity * 100)}%</RoomValue>
+                        <RoomValue>Date Retrieved: {h.date}</RoomValue>
+                    </Room>
                 }
             );
         }
