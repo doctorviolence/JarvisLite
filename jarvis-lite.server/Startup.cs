@@ -17,7 +17,14 @@ namespace jarvis_lite.server
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-
+            services.AddCors(options =>
+            {
+                options.AddPolicy("MyLocalOrigin",
+                    builder => builder
+                        .WithOrigins("http://localhost:3000")
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
+            });
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -27,6 +34,7 @@ namespace jarvis_lite.server
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseCors("MyLocalOrigin");
             app.UseMvc();
         }
     }

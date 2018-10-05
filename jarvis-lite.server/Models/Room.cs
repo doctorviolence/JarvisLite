@@ -22,8 +22,6 @@ namespace jarvis_lite.server.Models
         [JsonProperty("date")] 
         public string Date { get; set; }
         
-        private House House { get; set; }  
-
         public Room()
         {
         }
@@ -33,13 +31,12 @@ namespace jarvis_lite.server.Models
             Name = name;
         }
 
-        public Room(string name, float temperature, float humidity, string date, House house)
+        public Room(string name, float temperature, float humidity, string date)
         {
             Name = name;
             Temperature = temperature;
             Humidity = humidity;
             Date = date;
-            House = house;
         }
     }
 }
